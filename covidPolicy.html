@@ -1,0 +1,38 @@
+<!-- build here -->
+<html>
+    <head>
+        <title>Covid-19 Related Public Health Policy</title>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script>
+            d3.csv('\Data_WHO_Coronavirus_Covid_Cases_Deaths_data.csv', parse).then(process);
+            
+            function parse(data) {
+                return {
+                    "date_epicrv" : data.date_epicrv,
+                    "ADM0_NAME" : data.ADM0_NAME,
+                    "NewCase" : Number(data.NewCase),
+                    "CumCase" : Number(data.CumCase)
+                };
+            }    
+
+            function process(data) {
+                console.log(data);
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Covid-19 Related Public Health Policy</h1>
+        <div>
+            <p>SCENE 1 : early days projections</p>
+        </div>
+        <div>
+            <p>SCENE 2 : implementation of public closure</p>
+        </div>
+        <div>
+            <p>SCENE 3 : reopening</p>
+        </div>
+        <div>
+            <p>SCENE 4 : future projection</p>
+        </div>
+    </body>
+</html>
