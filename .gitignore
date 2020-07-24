@@ -1,2 +1,7 @@
 github_covidpolicy
 github_covidpolicy.pub
+_site
+.sass-cache
+.jekyll-cache
+.jekyll-metadata
+vendor
