@@ -2,36 +2,216 @@
     <head>
         <title>Covid-19 Related Public Health Policy</title>
         <script src="https://d3js.org/d3.v5.min.js"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@200&display=swap" rel="stylesheet">
+        <style>
+            body{
+                font-family: 'Mulish', sans-serif;
+            }
+            .leftDiv{
+                width: 300px;
+                height: 350px;
+                border: 2px;
+                border-color: grey;
+                border-style: none solid none none;
+                padding: 10px;
+                margin: 10px;
+                float:left;
+            }
+            .rightDiv{
+                width: 700px;
+                height: 350px;
+                border: 2px;
+                /*border-color: grey;
+                border-style: solid;*/
+                padding-left: 10px;
+                margin-left: 5px;
+                float:left;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Covid-19 Related Public Health Policy</h1>
+        <div class="leftDiv">
+            <div>
+                <p>SCENE 1 : early days projections</p>
+            </div>
+            <div>
+                <p>SCENE 2 : implementation of public closure</p>
+            </div>
+            <div>
+                <p>SCENE 3 : reopening</p>
+            </div>
+            <div>
+                <p>SCENE 4 : future projection</p>
+            </div>
+        </div>
+        <div class="rightDiv">
+            <p>
+                graph selector: <br>
+                country - drop down <br>
+                time span - slides
+            </p>
+            <svg id="graph"></svg>
+        </div>
+
         <script>
+            var strictIsoParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
+            var countryData = {}; //need to graoup data per country
+            var countrySelection = 'United States of America';
+
+            var x; //sepcified for global sharing :(
+            var y;
+
+            //setup canvas
+            var margin = {top: 10, right: 30, bottom: 30, left: 60},
+            width = 700 - margin.left - margin.right,
+            height = 300 - margin.top - margin.bottom;
+
+            console.log(d3.select("#graph"));
+
+            var svg = d3.select('svg')
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+            
+
             d3.csv('\Data_WHO_Coronavirus_Covid_Cases_Deaths_data.csv', parse).then(process);
             
             function parse(data) {
+                var y = strictIsoParse(data.date_epicrv);
                 return {
-                    "date_epicrv" : data.date_epicrv,
-                    "ADM0_NAME" : data.ADM0_NAME,
+                    "date_epicrv" : y,//y.getFullYear() + '-' + y.getMonth() + '-' + y.getDate(),
+                    "ADM0_NAME" : data.ADM0_NAME, //Country Name
                     "NewCase" : Number(data.NewCase),
                     "CumCase" : Number(data.CumCase)
                 };
             }    
 
             function process(data) {
+                data.forEach(function(item){
+                    if (!countryData.hasOwnProperty(item.ADM0_NAME)){
+                        countryData[item.ADM0_NAME] = [];
+                    }
+                    countryData[item.ADM0_NAME].push(item);
+                });
+                console.log(countryData);
+                
+                //graph per country
+                genGraphAndAxis(countryData[countrySelection]);
+                var sourceProjectingData = [];
+                sourceProjectingData.push(countryData[countrySelection][100]);
+                sourceProjectingData.push(countryData[countrySelection][101]);
+                sourceProjectingData.push(countryData[countrySelection][102]);
+
+                genProjectionGraph(sourceProjectingData, 0.0001, "purple");
+                genProjectionGraph(sourceProjectingData, 0.000125, "magenta");
+                genProjectionGraph(sourceProjectingData, 0.00015, "red");
+                genProjectionGraph(sourceProjectingData, 0.0002, "green");
+                genProjectionGraph(sourceProjectingData, 0.0003, "yellow");
+                genProjectionGraph(sourceProjectingData, 0, "teal");
+            }
+
+            function genGraphAndAxis(data){
+                //console.log(data);
+                // Add X axis --> it is a date format
+                x = d3.scaleTime()
+                    //.domain(d3.extent(data, function(d) { return d.date_epicrv; }))
+                    //.domain(dates)
+                    .domain(d3.extent(data, function(d) { return d.date_epicrv; }))
+                    .range([ 0, width ]);
+                svg.append("g")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x));
+                
+                // Add Y axis
+                y = d3.scaleLinear()
+                    .domain([0, d3.max(data, function(d) { return +d.CumCase; })])
+                    .range([ height, 0 ]);
+                svg.append("g")
+                    .call(d3.axisLeft(y));
+
+                svg.append('path')
+                    .datum(data)
+                    .attr("fill", "none")
+                    .attr("stroke", "steelblue")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(function(d) { return x(d.date_epicrv) })
+                        .y(function(d) { return y(d.CumCase) })
+                    );
+            }
+
+            function genProjectionGraph(data, rc, color){
                 console.log(data);
+                var projectionData = projection(data, rc, 50, "CumCase", "date_epicrv");
+                console.log("projectionData : ");
+                console.log(projectionData);
+
+                svg.append('path')
+                    .datum(projectionData)
+                    .attr("fill", "none")
+                    .attr("stroke", color)
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(function(d) { return x(d.date_epicrv) })
+                        .y(function(d) { return y(d.CumCase) })
+                    );                
+            }
+
+            function projection(data,Rc,days,dataField,dateField){ //project for the next 30 days
+                var projectionData = [];
+                projectionData.push(data[0]);
+                projectionData.push(data[1]);
+                projectionData.push(data[2]);
+            
+                var onePercentCounter = 0;
+                var halfPercentCounter = 0;
+
+                var tempDate = new Date(data[1][dateField].getTime());
+                //console.log(tempDate);
+                //console.log(tempDate.getDate());
+                console.log('initial growth');
+                //console.log(((projectionData[projectionData.length - 1][dataField]-projectionData[projectionData.length - 2][dataField])/projectionData[projectionData.length - 2][dataField]));
+                console.log(projectionData.length);
+                console.log(Ri = projectionData[projectionData.length - 2][dataField]/projectionData[projectionData.length - 3][dataField]);
+            
+                for (var i=2; i < days+1; i++){
+                    //Ri = ((projectionData[projectionData.length - 1][dataField]-projectionData[projectionData.length - 2][dataField])/projectionData[projectionData.length - 2][dataField]); //increase in percent
+                    Ri = projectionData[projectionData.length - 2][dataField]/projectionData[projectionData.length - 3][dataField];
+                    
+                    var increases = (Ri - (Rc * i));
+                    //console.log("reducedIncrease : " + reducedIncrease);
+                    //check half percent counter
+                    if (halfPercentCounter > 0){
+                        increases = 1.005;
+                        halfPercentCounter--;
+                        if (halfPercentCounter == 0) break;
+                    }
+                    //check one percent counter
+                    else if (onePercentCounter > 0){
+                        increases = 1.01;
+                        onePercentCounter--;
+                        if (onePercentCounter == 0){
+                            halfPercentCounter = 10;
+                        }
+                    }
+                    else if (increases < 1.01){
+                        onePercentCounter = 10;
+                        increases = 1.01;
+                    }
+                    var newProjection = {};
+                    newProjection[dataField]=projectionData[i][dataField] * increases;//(1 + reducedIncrease);
+                    
+                    tempDate.setDate(tempDate.getDate() + 1);
+                    //console.log("tempDate in Loop : " + tempDate);
+                    newProjection[dateField] = new Date(tempDate.getTime());
+                    projectionData.push(newProjection);
+                }
+            
+                return projectionData;
             }
         </script>
-    </head>
-    <body>
-        <h1>Covid-19 Related Public Health Policy</h1>
-        <div>
-            <p>SCENE 1 : early days projections</p>
-        </div>
-        <div>
-            <p>SCENE 2 : implementation of public closure</p>
-        </div>
-        <div>
-            <p>SCENE 3 : reopening</p>
-        </div>
-        <div>
-            <p>SCENE 4 : future projection</p>
-        </div>
     </body>
 </html>
