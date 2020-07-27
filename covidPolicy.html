@@ -3,9 +3,23 @@
         <title>Covid-19 Related Public Health Policy</title>
         <script src="https://d3js.org/d3.v5.min.js"></script>
         <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@200&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@600&display=swap" rel="stylesheet">
         <style>
             body{
-                font-family: 'Mulish', sans-serif;
+                font-family: 'Mulish', sans-serif;   
+            }
+            button {
+               border: none;
+               border-radius: 0px;
+               transition-duration: 0.4s;
+            }
+            button:hover {
+                background-color: #4CAF50; /* Green */
+                color: white;
+            }
+            .sceneSelected {
+                background-color: #4CAF50; /* Green */
+                color: white;
             }
             .leftDiv{
                 width: 300px;
@@ -27,22 +41,42 @@
                 margin-left: 5px;
                 float:left;
             }
+            .hide{
+                display: none;
+            }
         </style>
     </head>
     <body>
         <h1>Covid-19 Related Public Health Policy</h1>
+        <p>In the past couple of months, how does US states policy response to covid shapes infection rate. How does this compare to other mathematical modelling and other country.</p>
         <div class="leftDiv">
-            <div>
-                <p>SCENE 1 : early days projections</p>
+            <button id="buttonScene1" onclick="openScene1()" class="sceneSelected">1</button>
+            <button id="buttonScene2" onclick="openScene2()">2</button>
+            <button id="buttonScene3" onclick="openScene3()">3</button>
+            <button id="buttonScene4" onclick="openScene4()">4</button>
+            <div id="scene1">
+                <p>
+                    <b>EARLY PROJECTIONS</b><br> 
+                    In the early months of corona virus pandemic (End of March/Early April 2020), we can see how projection predicts high number of future covid-19 cases. 
+                </p>
             </div>
-            <div>
-                <p>SCENE 2 : implementation of public closure</p>
+            <div id="scene2" class="hide">
+                <p>
+                    <b>IMPLEMENTATION PUBLIC CLOSURE</b><br> 
+                    Goverments around the world start implementing policy of public closure in anticipation of corona pandemic.
+                </p>
             </div>
-            <div>
-                <p>SCENE 3 : reopening</p>
+            <div id="scene3" class="hide">
+                <p>
+                    <b>SELF-QUARANTINE EASING</b><br> 
+                    As pandemic progresses, some goverment and states shows decreases in infection rate and start to relax public closure policy.  However this policy affect vary across countries.
+                </p>
             </div>
-            <div>
-                <p>SCENE 4 : future projection</p>
+            <div id="scene4" class="hide">
+                <p>
+                    <b>FUTURE PROJECTION</b><br> 
+                    With new policy implementation of mandatory mask, social distancing and public reopen will infection rate follow the predictive model? Only time will tell, but we can play our role slowing down the spread by waring mask and social distance.
+                </p>
             </div>
         </div>
         <div class="rightDiv">
@@ -53,7 +87,7 @@
             </p>
             <svg id="graph"></svg>
         </div>
-
+        
         <script>
             var strictIsoParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
             var countryData = {}; //need to graoup data per country
@@ -106,11 +140,12 @@
                 sourceProjectingData.push(countryData[countrySelection][102]);
 
                 genProjectionGraph(sourceProjectingData, 0.0001, "purple");
-                genProjectionGraph(sourceProjectingData, 0.000125, "magenta");
+                //genProjectionGraph(sourceProjectingData, 0.000125, "magenta");
                 genProjectionGraph(sourceProjectingData, 0.00015, "red");
-                genProjectionGraph(sourceProjectingData, 0.0002, "green");
-                genProjectionGraph(sourceProjectingData, 0.0003, "yellow");
-                genProjectionGraph(sourceProjectingData, 0, "teal");
+                //genProjectionGraph(sourceProjectingData, 0.0002, "green");
+                genProjectionGraph(sourceProjectingData, 0.0003, "green");
+                genProjectionGraph(sourceProjectingData, 0.00005, "grey");
+                genProjectionGraph(sourceProjectingData, 0, "black");
             }
 
             function genGraphAndAxis(data){
@@ -153,6 +188,7 @@
                     .datum(projectionData)
                     .attr("fill", "none")
                     .attr("stroke", color)
+                    .attr("stroke-dasharray", "2")
                     .attr("stroke-width", 1.5)
                     .attr("d", d3.line()
                         .x(function(d) { return x(d.date_epicrv) })
@@ -170,12 +206,9 @@
                 var halfPercentCounter = 0;
 
                 var tempDate = new Date(data[1][dateField].getTime());
-                //console.log(tempDate);
-                //console.log(tempDate.getDate());
-                console.log('initial growth');
-                //console.log(((projectionData[projectionData.length - 1][dataField]-projectionData[projectionData.length - 2][dataField])/projectionData[projectionData.length - 2][dataField]));
-                console.log(projectionData.length);
-                console.log(Ri = projectionData[projectionData.length - 2][dataField]/projectionData[projectionData.length - 3][dataField]);
+                //console.log('initial growth');
+                //console.log(projectionData.length);
+                //console.log(Ri = projectionData[projectionData.length - 2][dataField]/projectionData[projectionData.length - 3][dataField]);
             
                 for (var i=2; i < days+1; i++){
                     //Ri = ((projectionData[projectionData.length - 1][dataField]-projectionData[projectionData.length - 2][dataField])/projectionData[projectionData.length - 2][dataField]); //increase in percent
@@ -211,6 +244,58 @@
                 }
             
                 return projectionData;
+            }
+
+            /*---- SCENE TRANSITION ----*/
+            var buttonIds = [
+                'buttonScene1',
+                'buttonScene2',
+                'buttonScene3',
+                'buttonScene4'
+            ];
+            var sceneIds = [
+                'scene1',
+                'scene2',
+                'scene3',
+                'scene4'
+            ];
+            function deselectAllButton(){
+                buttonIds.forEach(function(id){
+                    document.getElementById(id).className = '';
+                });
+            }
+            function hideAllScene(){
+                sceneIds.forEach(function(id){
+                    document.getElementById(id).className = 'hide';
+                });
+            }
+            function openScene1(){
+                deselectAllButton();
+                hideAllScene();
+                document.getElementById(buttonIds[0]).className = 'sceneSelected';
+                document.getElementById(sceneIds[0]).className = '';
+                //graph re-rendering
+            }
+            function openScene2(){
+                deselectAllButton();
+                hideAllScene();
+                document.getElementById(buttonIds[1]).className = 'sceneSelected';
+                document.getElementById(sceneIds[1]).className = '';
+                //graph re-rendering
+            }
+            function openScene3(){
+                deselectAllButton();
+                hideAllScene();
+                document.getElementById(buttonIds[2]).className = 'sceneSelected';
+                document.getElementById(sceneIds[2]).className = '';
+                //graph re-rendering
+            }
+            function openScene4(){
+                deselectAllButton();
+                hideAllScene();
+                document.getElementById(buttonIds[3]).className = 'sceneSelected';
+                document.getElementById(sceneIds[3]).className = '';
+                //graph re-rendering
             }
         </script>
     </body>
