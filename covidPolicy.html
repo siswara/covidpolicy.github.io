@@ -54,6 +54,7 @@
             <button id="buttonScene2" onclick="openScene2()">2</button>
             <button id="buttonScene3" onclick="openScene3()">3</button>
             <button id="buttonScene4" onclick="openScene4()">4</button>
+            <button id="buttonScene5" onclick="openScene5()">5</button>
             <div id="scene1">
                 <p>
                     <b>EARLY PROJECTIONS</b><br> 
@@ -78,12 +79,27 @@
                     With new policy implementation of mandatory mask, social distancing and public reopen will infection rate follow the predictive model? Only time will tell, but we can play our role slowing down the spread by waring mask and social distance.
                 </p>
             </div>
+            <div id="scene5" class="hide">
+                    <p>
+                        <b>References</b><br> 
+                        <ul>
+                            <li>Literature source for prediction model <a href="https://www.medrxiv.org/content/10.1101/2020.03.21.20039867v1.full.pdf">A New, Simple Projection Model for COVID-19 Pandemic.pdf</a></li>
+                            <li>WHO covid data <a href="https://data.humdata.org/dataset/coronavirus-covid-19-cases-and-deaths">Coronavirus (COVID-19) Cases and Deaths</a></li>
+                        </ul>
+                    </p>
+            </div>
         </div>
         <div class="rightDiv">
             <p>
-                graph selector: <br>
-                country - drop down <br>
-                time span - slides
+                country 
+                <select name="country" id="country" onchange="updateCountry()">
+                    <option value="United States of America">United States of America</option>
+                    <option value="Germany">Germany</option>
+                    <option value="Italy">Italy</option>
+                    <option value="New Zealand">New Zealand</option>
+                    <option value="Republic of Korea">South Korea</option>
+                    <option value="Sweden">Sweden</option>
+                </select>
             </p>
             <svg id="graph"></svg>
         </div>
@@ -246,18 +262,37 @@
                 return projectionData;
             }
 
+            function removeAllGraphs(){
+                svg.selectAll('path').remove();
+                svg.selectAll('g').remove();
+                svg.append("g")
+                .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+            }
+
+            /*---- UPDATE TRIGGER ----*/
+            
+            function updateCountry(){
+                countrySelection = document.getElementById("country").value;
+                removeAllGraphs();
+                genGraphAndAxis(countryData[countrySelection]);
+            }
+
             /*---- SCENE TRANSITION ----*/
+            var activeScene = 1;
             var buttonIds = [
                 'buttonScene1',
                 'buttonScene2',
                 'buttonScene3',
-                'buttonScene4'
+                'buttonScene4',
+                'buttonScene5'
             ];
             var sceneIds = [
                 'scene1',
                 'scene2',
                 'scene3',
-                'scene4'
+                'scene4',
+                'scene5'
             ];
             function deselectAllButton(){
                 buttonIds.forEach(function(id){
@@ -274,6 +309,7 @@
                 hideAllScene();
                 document.getElementById(buttonIds[0]).className = 'sceneSelected';
                 document.getElementById(sceneIds[0]).className = '';
+                activeScene = 1;
                 //graph re-rendering
             }
             function openScene2(){
@@ -281,6 +317,7 @@
                 hideAllScene();
                 document.getElementById(buttonIds[1]).className = 'sceneSelected';
                 document.getElementById(sceneIds[1]).className = '';
+                activeScene = 2;
                 //graph re-rendering
             }
             function openScene3(){
@@ -288,6 +325,7 @@
                 hideAllScene();
                 document.getElementById(buttonIds[2]).className = 'sceneSelected';
                 document.getElementById(sceneIds[2]).className = '';
+                activeScene = 3;
                 //graph re-rendering
             }
             function openScene4(){
@@ -295,6 +333,15 @@
                 hideAllScene();
                 document.getElementById(buttonIds[3]).className = 'sceneSelected';
                 document.getElementById(sceneIds[3]).className = '';
+                activeScene = 4;
+                //graph re-rendering
+            }
+            function openScene5(){
+                deselectAllButton();
+                hideAllScene();
+                document.getElementById(buttonIds[4]).className = 'sceneSelected';
+                document.getElementById(sceneIds[4]).className = '';
+                activeScene = 5;
                 //graph re-rendering
             }
         </script>
