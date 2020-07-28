@@ -48,7 +48,7 @@
     </head>
     <body>
         <h1>Covid-19 Related Public Health Policy</h1>
-        <p>In the past couple of months, how does US states policy response to covid shapes infection rate. How does this compare to other mathematical modelling and other country.</p>
+        <p>In the past couple of months, how does US policy response to covid shapes infection rate. How does this compare to other mathematical modelling and other country.</p>
         <div class="leftDiv">
             <button id="buttonScene1" onclick="openScene1()" class="sceneSelected">1</button>
             <button id="buttonScene2" onclick="openScene2()">2</button>
@@ -70,7 +70,7 @@
             <div id="scene3" class="hide">
                 <p>
                     <b>SELF-QUARANTINE EASING</b><br> 
-                    As pandemic progresses, some goverment and states shows decreases in infection rate and start to relax public closure policy.  However this policy affect vary across countries.
+                    As pandemic progresses, some goverment shows decreases in infection rate and start to relax public closure policy.  However this policy affect vary across countries.
                 </p>
             </div>
             <div id="scene4" class="hide">
@@ -158,7 +158,7 @@
                 console.log(countryData);
                 
                 //graph per country
-                genGraphAndAxis(countryData[countrySelection]);
+                //genGraphAndAxis(countryData[countrySelection]);
                 genScreenGraph();
                 /*
                 var sourceProjectingData = [];
@@ -217,7 +217,32 @@
                     }
                 });
 
-                
+                var slicedData = data.slice(0, startIndex+2);
+                // Add X axis --> it is a date format
+                x = d3.scaleTime()
+                    //.domain(d3.extent(data, function(d) { return d.date_epicrv; }))
+                    //.domain(dates)
+                    .domain(d3.extent(/*data*/countryData['United States of America'], function(d) { return d.date_epicrv; }))
+                    .range([ 0, width ]);
+                svg.append("g")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x));
+                // Add Y axis
+                y = d3.scaleLinear()
+                    .domain([0, d3.max(data, function(d) { return +d.CumCase; })])
+                    .range([ height, 0 ]);
+                svg.append("g")
+                    .call(d3.axisLeft(y));
+
+                svg.append('path')
+                    .datum(slicedData)
+                    .attr("fill", "none")
+                    .attr("stroke", "steelblue")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(function(d) { return x(d.date_epicrv) })
+                        .y(function(d) { return y(d.CumCase) })
+                    );
             }
 
             function genProjectionGraph(data, rc, color){
