@@ -108,6 +108,15 @@
             var strictIsoParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
             var countryData = {}; //need to graoup data per country
             var countrySelection = 'United States of America';
+            var countryOptions = {
+                'USA' : 'United States of America',
+                'GER' : 'Germany',
+                'ITA' : 'Italy',
+                'NZL' : 'New Zealand',
+                'KOR' : 'Republic of Korea',
+                'SWE' : 'Sweden',
+            };
+            var activeScene = 1;
 
             var x; //sepcified for global sharing :(
             var y;
@@ -150,6 +159,8 @@
                 
                 //graph per country
                 genGraphAndAxis(countryData[countrySelection]);
+                genScreenGraph();
+                /*
                 var sourceProjectingData = [];
                 sourceProjectingData.push(countryData[countrySelection][100]);
                 sourceProjectingData.push(countryData[countrySelection][101]);
@@ -162,6 +173,7 @@
                 genProjectionGraph(sourceProjectingData, 0.0003, "green");
                 genProjectionGraph(sourceProjectingData, 0.00005, "grey");
                 genProjectionGraph(sourceProjectingData, 0, "black");
+                */
             }
 
             function genGraphAndAxis(data){
@@ -170,7 +182,7 @@
                 x = d3.scaleTime()
                     //.domain(d3.extent(data, function(d) { return d.date_epicrv; }))
                     //.domain(dates)
-                    .domain(d3.extent(data, function(d) { return d.date_epicrv; }))
+                    .domain(d3.extent(/*data*/countryData['United States of America'], function(d) { return d.date_epicrv; }))
                     .range([ 0, width ]);
                 svg.append("g")
                     .attr("transform", "translate(0," + height + ")")
@@ -194,6 +206,20 @@
                     );
             }
 
+            function genGraphAndAxisUntilDate(data,startDate){
+                var startIndex = 0;
+                var i = 0;
+                data.forEach(function(item){
+                    if (item.date_epicrv.getTime() == startDate.getTime()){
+                        startIndex = i;
+                    } else {
+                        i++;
+                    }
+                });
+
+                
+            }
+
             function genProjectionGraph(data, rc, color){
                 console.log(data);
                 var projectionData = projection(data, rc, 50, "CumCase", "date_epicrv");
@@ -212,6 +238,41 @@
                     );                
             }
 
+            function genProjectionFromStartDate(data,startDate){
+                //console.log('startDate');
+                //console.log(startDate);
+                
+                var startIndex = 0;
+                var i = 0;
+                data.forEach(function(item){
+                    if (item.date_epicrv.getTime() == startDate.getTime()){
+                        startIndex = i;
+                    } else {
+                        i++;
+                    }
+                });
+                
+                console.log('startIndex');
+                console.log(startIndex);
+
+                var sourceProjectingData = [];
+
+                if (startIndex >= (data.length - 2)){
+                    startIndex = data.length - 3;
+                }
+
+                sourceProjectingData.push(data[startIndex]);
+                sourceProjectingData.push(data[startIndex+1]);
+                sourceProjectingData.push(data[startIndex+2]);
+
+                //do projection
+                genProjectionGraph(sourceProjectingData, 0.003, "teal"); //best
+                genProjectionGraph(sourceProjectingData, 0.0015, "orange"); //better
+                genProjectionGraph(sourceProjectingData, 0.001, "red"); //not bad
+                //genProjectionGraph(sourceProjectingData, 0.00005, "grey"); //bad
+                //genProjectionGraph(sourceProjectingData, 0, "black"); //worst
+            }
+
             function projection(data,Rc,days,dataField,dateField){ //project for the next 30 days
                 var projectionData = [];
                 projectionData.push(data[0]);
@@ -222,16 +283,11 @@
                 var halfPercentCounter = 0;
 
                 var tempDate = new Date(data[1][dateField].getTime());
-                //console.log('initial growth');
-                //console.log(projectionData.length);
-                //console.log(Ri = projectionData[projectionData.length - 2][dataField]/projectionData[projectionData.length - 3][dataField]);
             
                 for (var i=2; i < days+1; i++){
-                    //Ri = ((projectionData[projectionData.length - 1][dataField]-projectionData[projectionData.length - 2][dataField])/projectionData[projectionData.length - 2][dataField]); //increase in percent
                     Ri = projectionData[projectionData.length - 2][dataField]/projectionData[projectionData.length - 3][dataField];
                     
                     var increases = (Ri - (Rc * i));
-                    //console.log("reducedIncrease : " + reducedIncrease);
                     //check half percent counter
                     if (halfPercentCounter > 0){
                         increases = 1.005;
@@ -254,7 +310,6 @@
                     newProjection[dataField]=projectionData[i][dataField] * increases;//(1 + reducedIncrease);
                     
                     tempDate.setDate(tempDate.getDate() + 1);
-                    //console.log("tempDate in Loop : " + tempDate);
                     newProjection[dateField] = new Date(tempDate.getTime());
                     projectionData.push(newProjection);
                 }
@@ -275,11 +330,46 @@
             function updateCountry(){
                 countrySelection = document.getElementById("country").value;
                 removeAllGraphs();
-                genGraphAndAxis(countryData[countrySelection]);
+                //genGraphAndAxis(countryData[countrySelection]);
+                //render graph based on screen selection
+                genScreenGraph();
+            }
+
+            function genScreenGraph(){
+                switch(activeScene){
+                    case 1:
+                        var startDate = new Date('2020-03-15T00:00:00.000Z');
+                        switch(countrySelection){
+                            case countryOptions.USA:
+                                startDate = new Date('2020-04-05T00:00:00.000Z');
+                                break;
+                            case countryOptions.ITA:
+                                startDate = new Date('2020-03-25T00:00:00.000Z');
+                                break;
+                            case countryOptions.NZL:
+                                startDate = new Date('2020-03-25T00:00:00.000Z');
+                                break;
+                            case countryOptions.KOR:
+                                startDate = new Date('2020-02-25T00:00:00.000Z');
+                                break;
+                            case countryOptions.SWE:
+                                startDate = new Date('2020-03-25T00:00:00.000Z');
+                                break;
+                        }
+                        //starting date is different for each country
+                        genGraphAndAxisUntilDate(countryData[countrySelection], startDate);
+                        genProjectionFromStartDate(countryData[countrySelection],startDate);
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                }
             }
 
             /*---- SCENE TRANSITION ----*/
-            var activeScene = 1;
             var buttonIds = [
                 'buttonScene1',
                 'buttonScene2',
