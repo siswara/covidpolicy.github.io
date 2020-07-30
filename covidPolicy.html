@@ -58,7 +58,7 @@
             <div id="scene1">
                 <p>
                     <b>EARLY PROJECTIONS</b><br> 
-                    In the early months of corona virus pandemic (End of March/Early April 2020), we can see how projection predicts high number of future covid-19 cases. 
+                    In the early months of corona virus pandemic (End of February to March 2020), we can see how projection predicts high number of future covid-19 cases. 
                 </p>
             </div>
             <div id="scene2" class="hide">
@@ -222,14 +222,16 @@
                 x = d3.scaleTime()
                     //.domain(d3.extent(data, function(d) { return d.date_epicrv; }))
                     //.domain(dates)
-                    .domain(d3.extent(/*data*/countryData['United States of America'], function(d) { return d.date_epicrv; }))
+                    .domain(d3.extent(/*data*/countryData['United States of America'].slice(0, startIndex+50), 
+                        function(d) { return d.date_epicrv; }))
                     .range([ 0, width ]);
                 svg.append("g")
                     .attr("transform", "translate(0," + height + ")")
                     .call(d3.axisBottom(x));
                 // Add Y axis
                 y = d3.scaleLinear()
-                    .domain([0, d3.max(data, function(d) { return +d.CumCase; })])
+                    //.domain([0, d3.max(data, function(d) { return +d.CumCase; })])
+                    .domain([0, d3.max(slicedData, function(d) { return +(d.CumCase*5.0); })])
                     .range([ height, 0 ]);
                 svg.append("g")
                     .call(d3.axisLeft(y));
@@ -247,7 +249,7 @@
 
             function genProjectionGraph(data, rc, color){
                 console.log(data);
-                var projectionData = projection(data, rc, 50, "CumCase", "date_epicrv");
+                var projectionData = projection(data, rc, 20, "CumCase", "date_epicrv");
                 console.log("projectionData : ");
                 console.log(projectionData);
 
@@ -291,11 +293,10 @@
                 sourceProjectingData.push(data[startIndex+2]);
 
                 //do projection
-                genProjectionGraph(sourceProjectingData, 0.003, "teal"); //best
-                genProjectionGraph(sourceProjectingData, 0.0015, "orange"); //better
-                genProjectionGraph(sourceProjectingData, 0.001, "red"); //not bad
-                //genProjectionGraph(sourceProjectingData, 0.00005, "grey"); //bad
-                //genProjectionGraph(sourceProjectingData, 0, "black"); //worst
+                genProjectionGraph(sourceProjectingData, 0.03, "blue"); //best
+                genProjectionGraph(sourceProjectingData, 0.02, "teal"); //best
+                genProjectionGraph(sourceProjectingData, 0.01, "orange"); //better
+                genProjectionGraph(sourceProjectingData, 0.0075, "red"); //not bad
             }
 
             function projection(data,Rc,days,dataField,dateField){ //project for the next 30 days
@@ -307,12 +308,12 @@
                 var onePercentCounter = 0;
                 var halfPercentCounter = 0;
 
-                var tempDate = new Date(data[1][dateField].getTime());
+                var tempDate = new Date(data[2][dateField].getTime());
             
-                for (var i=2; i < days+1; i++){
-                    Ri = projectionData[projectionData.length - 2][dataField]/projectionData[projectionData.length - 3][dataField];
+                for (var i=2; i < days; i++){
+                    Ri = projectionData[projectionData.length - 1][dataField]/projectionData[projectionData.length - 2][dataField];
                     
-                    var increases = (Ri - (Rc * i));
+                    var increases = (Ri - Rc);
                     //check half percent counter
                     if (halfPercentCounter > 0){
                         increases = 1.005;
@@ -333,7 +334,7 @@
                     }
                     var newProjection = {};
                     newProjection[dataField]=projectionData[i][dataField] * increases;//(1 + reducedIncrease);
-                    
+                    console.log('### projectionData[i][dataField] : ' + projectionData[i][dataField] + ' * ### increases : ' + increases + ' == ### newProjection : ' + newProjection[dataField]);
                     tempDate.setDate(tempDate.getDate() + 1);
                     newProjection[dateField] = new Date(tempDate.getTime());
                     projectionData.push(newProjection);
@@ -366,7 +367,8 @@
                         var startDate = new Date('2020-03-15T00:00:00.000Z');
                         switch(countrySelection){
                             case countryOptions.USA:
-                                startDate = new Date('2020-04-05T00:00:00.000Z');
+                                //startDate = new Date('2020-04-05T00:00:00.000Z');
+                                startDate = new Date('2020-03-03T00:00:00.000Z');
                                 break;
                             case countryOptions.ITA:
                                 startDate = new Date('2020-03-25T00:00:00.000Z');
@@ -426,6 +428,7 @@
                 document.getElementById(sceneIds[0]).className = '';
                 activeScene = 1;
                 //graph re-rendering
+                genScreenGraph();
             }
             function openScene2(){
                 deselectAllButton();
