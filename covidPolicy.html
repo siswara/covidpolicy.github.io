@@ -2,6 +2,8 @@
     <head>
         <title>Covid-19 Related Public Health Policy</title>
         <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+        <script src="https://momentjs.com/downloads/moment.min.js"></script>
         <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@200&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@600&display=swap" rel="stylesheet">
         <style>
@@ -66,8 +68,8 @@
             </div>
             <div id="scene2" class="hide">
                 <p>
-                    <b>IMPLEMENTATION PUBLIC CLOSURE</b><br> 
-                    Goverments around the world start implementing policy of public closure in anticipation of corona pandemic.
+                    <b>IMPLEMENTATION PUBLIC RESTRICTION</b><br> 
+                    Goverments around the world start implementing policy of public gratheric restriction and/on closure in anticipation of corona pandemic.
                 </p>
             </div>
             <div id="scene3" class="hide">
@@ -110,6 +112,7 @@
         <script>
             var strictIsoParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
             var countryData = {}; //need to graoup data per country
+            var countryDateIndex = {};
             var countrySelection = 'United States of America';
             var countryOptions = {
                 'USA' : 'United States of America',
@@ -167,13 +170,6 @@
                     .attr("fill","white")
                     .attr("stroke","black")
                 
-                /*svg.append('path')
-                    .attr("fill", "none")
-                    .attr("stroke", blue)
-                    .attr("stroke-dasharray", "2")
-                    .attr("stroke-width", 1.5)
-                    .attr("d","M 25 20 H 50"); 
-                */
                 svg.append("circle").attr("cx",35).attr("cy",30).attr("r", 3).style("fill", "blue")
                 svg.append("circle").attr("cx",35).attr("cy",42).attr("r", 3).style("fill", "teal")
                 svg.append("circle").attr("cx",35).attr("cy",54).attr("r", 3).style("fill", "orange")
@@ -200,10 +196,13 @@
                 data.forEach(function(item){
                     if (!countryData.hasOwnProperty(item.ADM0_NAME)){
                         countryData[item.ADM0_NAME] = [];
+                        countryDateIndex[item.ADM0_NAME] = {};
                     }
                     countryData[item.ADM0_NAME].push(item);
+                    countryDateIndex[item.ADM0_NAME][item.date_epicrv] = countryData[item.ADM0_NAME].length - 1;
                 });
                 console.log(countryData);
+                console.log(countryDateIndex);
                 
                 //graph per country
                 //genGraphAndAxis(countryData[countrySelection]);
@@ -395,54 +394,188 @@
             function removeAllGraphs(){
                 svg.selectAll('path').remove();
                 svg.selectAll('g').remove();
+                svg.selectAll('#annotation-group').remove();
+                svg.selectAll('g').selectAll('cicle').remove();
                 svg.append("g")
                 .attr("transform",
                     "translate(" + margin.left + "," + margin.top + ")");
+            }
+
+            function genAnnotation(selectedDate, notes, textHeight = 50){
+                
+                var typeAnnotation = d3.annotationCalloutElbow;
+                console.log('data for annotation : ');
+                var annotationData = countryData[countrySelection][countryDateIndex[countrySelection][selectedDate]];
+                console.log(annotationData);
+                /*
+                    console.log(countryData[countrySelection][countryDateIndex[countrySelection][selectedDate]]);
+                    var annotations = [{
+                        note: {
+                        label: "Test Label",
+                        bgPadding: 0,
+                        title: "Annotations :)"
+                        },
+                        //can use x, y directly instead of data
+                        data: countryData[countrySelection][countryDateIndex[countrySelection][selectedDate]],
+                        className: "show-bg",
+                        dy: -50,
+                        dx: -20,
+                        connector: { end: "arrow" }
+                    }];
+                    var makeAnnotations = d3.annotation()
+                        .editMode(false)//true)
+                        //also can set and override in the note.padding property
+                        //of the annotation object
+                        .notePadding(5)
+                        .type(typeAnnotation)
+                        //accessors & accessorsInverse not needed
+                        //if using x, y in annotations JSON
+                        .accessors({
+                            x: function(d) { return x(d.date_epicrv) }, //d => x(d.date_epicrv),
+                            y: function(d) { return y(d.CumCase) }//d => y(d.CumCase)
+                        })
+                        //.accessorsInverse({
+                        //    date_epicrv: d => x.invert(d.x),
+                        //    cumCase: d => y.invert(d.y)
+                        //})
+                        .annotations(annotations);
+
+                    d3.select("svg")
+                        .append("g")
+                        .attr("class", "annotation-group")
+                        .call(makeAnnotations);
+                */
+
+                //check accessor
+                svg.append("g")
+                    .attr("class", "annotation-group")
+                    .append('circle')
+                    .attr('cx', x(annotationData.date_epicrv))
+                    .attr('cy', y(annotationData.CumCase) - 1)
+                    .attr('r', 3)
+                
+                svg.selectAll(".annotation-group")
+                    .append("line")
+                    .style("stroke", "black")
+                    .attr("x1", x(annotationData.date_epicrv))
+                    .attr("y1", y(annotationData.CumCase) - 1)
+                    .attr("x2", x(annotationData.date_epicrv))
+                    .attr("y2", y(annotationData.CumCase) - textHeight);
+
+                svg.selectAll(".annotation-group")
+                    .append("line")
+                    .style("stroke", "black")
+                    .attr("x1", x(annotationData.date_epicrv) - 15)
+                    .attr("y1", y(annotationData.CumCase) - textHeight)
+                    .attr("x2", x(annotationData.date_epicrv) + 15)
+                    .attr("y2", y(annotationData.CumCase) - textHeight);
+                
+                //svg.selectAll(".annotation-group")
+                svg.selectAll(".annotation-group")
+                    .append("text")
+                    .attr("x", x(annotationData.date_epicrv) + 15)
+                    .attr("y", y(annotationData.CumCase) - textHeight - 25)
+                    .text(moment(selectedDate).format('MMM Do YYYY'))
+                    .style("font-size", "10px")
+                    .attr("text-anchor","end");
+                svg.selectAll(".annotation-group")
+                    .append("text")
+                    .attr("x", x(annotationData.date_epicrv) + 15)
+                    .attr("y", y(annotationData.CumCase) - textHeight - 10)
+                    .text(notes)
+                    .style("font-size", "10px")
+                    .attr("text-anchor","end");
             }
 
             /*---- UPDATE TRIGGER ----*/
             
             function updateCountry(){
                 countrySelection = document.getElementById("country").value;
-                removeAllGraphs();
                 //genGraphAndAxis(countryData[countrySelection]);
                 //render graph based on screen selection
                 genScreenGraph();
             }
 
             function genScreenGraph(){
+                removeAllGraphs();
                 switch(activeScene){
                     case 1:
-                        var startDate = new Date('2020-03-15T00:00:00.000Z');
-                        switch(countrySelection){
-                            case countryOptions.USA:
-                                //startDate = new Date('2020-04-05T00:00:00.000Z');
-                                startDate = new Date('2020-03-03T00:00:00.000Z');
-                                break;
-                            case countryOptions.ITA:
-                                startDate = new Date('2020-03-25T00:00:00.000Z');
-                                break;
-                            case countryOptions.NZL:
-                                startDate = new Date('2020-03-25T00:00:00.000Z');
-                                break;
-                            case countryOptions.KOR:
-                                startDate = new Date('2020-02-20T00:00:00.000Z');
-                                break;
-                            case countryOptions.SWE:
-                                startDate = new Date('2020-03-25T00:00:00.000Z');
-                                break;
-                        }
-                        //starting date is different for each country
-                        genGraphAndAxisUntilDate(countryData[countrySelection], startDate);
-                        genProjectionFromStartDate(countryData[countrySelection],startDate);
+                        generateScene1graph();
                         break;
                     case 2:
+                        generateScene1graph();
+                        //var startDate = new Date('2020-03-10T00:00:00.000Z');
+                        //genAnnotation(startDate, 'Test');
+                        generateScene2Annotation();
                         break;
                     case 3:
                         break;
                     case 4:
                         break;
                 }
+            }
+
+            function generateScene1graph(){
+                var startDate = new Date('2020-03-15T00:00:00.000Z');
+                switch(countrySelection){
+                    case countryOptions.USA:
+                        //startDate = new Date('2020-04-05T00:00:00.000Z');
+                        startDate = new Date('2020-03-24T00:00:00.000Z');
+                        break;
+                    case countryOptions.GER:
+                        //startDate = new Date('2020-04-05T00:00:00.000Z');
+                        startDate = new Date('2020-03-24T00:00:00.000Z');
+                        break;
+                    case countryOptions.ITA:
+                        startDate = new Date('2020-03-25T00:00:00.000Z');
+                        break;
+                    case countryOptions.NZL:
+                        startDate = new Date('2020-03-25T00:00:00.000Z');
+                        break;
+                    case countryOptions.KOR:
+                        startDate = new Date('2020-02-21T00:00:00.000Z');
+                        break;
+                    case countryOptions.SWE:
+                        startDate = new Date('2020-03-25T00:00:00.000Z');
+                        break;
+                }
+                //starting date is different for each country
+                genGraphAndAxisUntilDate(countryData[countrySelection], startDate);
+                genProjectionFromStartDate(countryData[countrySelection],startDate);
+            }
+
+            function generateScene2Annotation(){
+                var startDate = new Date('2020-03-15T00:00:00.000Z');
+                var notes = '';
+                switch(countrySelection){
+                    case countryOptions.USA:
+                        startDate = new Date('2020-03-10T00:00:00.000Z');
+                        genAnnotation(startDate, 'NY/MA/WA State Closure');
+                        startDate = new Date('2020-03-19T00:00:00.000Z');
+                        genAnnotation(startDate, 'CA/PA/SC State Closure', 90);
+                        break;
+                    case countryOptions.GER:
+                        startDate = new Date('2020-03-22T00:00:00.000Z');
+                        genAnnotation(startDate, 'Public gathering limitation');
+                        break;
+                    case countryOptions.ITA:
+                        startDate = new Date('2020-02-21T00:00:00.000Z');
+                        genAnnotation(startDate, 'Public lockdown');
+                        break;
+                    case countryOptions.NZL:
+                        startDate = new Date('2020-03-23T00:00:00.000Z');
+                        genAnnotation(startDate, 'Public lockdown');
+                        break;
+                    case countryOptions.KOR:
+                        startDate = new Date('2020-02-20T00:00:00.000Z');
+                        genAnnotation(startDate, 'Military bases lockdown and travel restriction');
+                        break;
+                    case countryOptions.SWE:
+                        startDate = new Date('2020-03-11T00:00:00.000Z');
+                        genAnnotation(startDate, 'Public gathering limitation');
+                        break;
+                }
+                
             }
 
             /*---- SCENE TRANSITION ----*/
@@ -486,6 +619,7 @@
                 document.getElementById(sceneIds[1]).className = '';
                 activeScene = 2;
                 //graph re-rendering
+                genScreenGraph();
             }
             function openScene3(){
                 deselectAllButton();
