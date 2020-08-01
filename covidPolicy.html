@@ -95,7 +95,9 @@
                         <li>Us reopen timeline <a href="https://www.nytimes.com/interactive/2020/us/states-reopen-map-coronavirus.html">link</a></li>
                         <li>South Korea covid timeline <a href="https://en.wikipedia.org/wiki/COVID-19_pandemic_in_South_Korea">link</a></li>
                         <li>Germany covid policy timeline <a href="https://ourworldindata.org/covid-exemplar-germany">link</a></li>
+                        <li>Germany reopening <a href="https://en.wikipedia.org/wiki/COVID-19_pandemic_in_Germany">link</a></li>
                         <li>Italy covid timeline <a href="https://en.wikipedia.org/wiki/COVID-19_pandemic_lockdown_in_Italy">link</a></li>
+                        <li>Italy reopening <a href="https://www.wsj.com/articles/italy-to-reopen-gradually-starting-on-may-4-11587935242">link</a></li>
                         <li>New Zealand covid timeline <a href="https://time.com/5824042/new-zealand-coronavirus-elimination/">link</a></li>
                         <li>Sweden covid timeline <a href="https://en.wikipedia.org/wiki/COVID-19_pandemic_in_Sweden">link</a></li>
 
@@ -532,21 +534,38 @@
                     .attr("x2", x(annotationData.date_epicrv) + 15)
                     .attr("y2", y(annotationData.CumCase) - textHeight);
                 
-                //svg.selectAll(".annotation-group")
-                svg.selectAll(".annotation-group")
-                    .append("text")
-                    .attr("x", x(annotationData.date_epicrv) + 15)
-                    .attr("y", y(annotationData.CumCase) - textHeight - 25)
-                    .text(moment(selectedDate).format('MMM Do YYYY'))
-                    .style("font-size", "10px")
-                    .attr("text-anchor","end");
-                svg.selectAll(".annotation-group")
-                    .append("text")
-                    .attr("x", x(annotationData.date_epicrv) + 15)
-                    .attr("y", y(annotationData.CumCase) - textHeight - 10)
-                    .text(notes)
-                    .style("font-size", "10px")
-                    .attr("text-anchor","end");
+                if (textHeight > 0){
+                    //svg.selectAll(".annotation-group")
+                    svg.selectAll(".annotation-group")
+                        .append("text")
+                        .attr("x", x(annotationData.date_epicrv) + 15)
+                        .attr("y", y(annotationData.CumCase) - textHeight - 25)
+                        .text(moment(selectedDate).format('MMM Do YYYY'))
+                        .style("font-size", "10px")
+                        .attr("text-anchor","end");
+                    svg.selectAll(".annotation-group")
+                        .append("text")
+                        .attr("x", x(annotationData.date_epicrv) + 15)
+                        .attr("y", y(annotationData.CumCase) - textHeight - 10)
+                        .text(notes)
+                        .style("font-size", "10px")
+                        .attr("text-anchor","end");
+                } else {
+                    svg.selectAll(".annotation-group")
+                        .append("text")
+                        .attr("x", x(annotationData.date_epicrv) - 15)
+                        .attr("y", y(annotationData.CumCase) - textHeight + 15)
+                        .text(moment(selectedDate).format('MMM Do YYYY'))
+                        .style("font-size", "10px")
+                        .attr("text-anchor","start");
+                    svg.selectAll(".annotation-group")
+                        .append("text")
+                        .attr("x", x(annotationData.date_epicrv) - 15)
+                        .attr("y", y(annotationData.CumCase) - textHeight + 30)
+                        .text(notes)
+                        .style("font-size", "10px")
+                        .attr("text-anchor","start");
+                }
             }
 
             /*---- UPDATE TRIGGER ----*/
@@ -583,6 +602,7 @@
                         //generateScene1graphXYOnly();
                         generateScene3graph();
                         generateScene4graph();
+                        //setTimeout(generateScene4Annotation, 2000);
                         break;
                     case 5:
                         break;
@@ -685,6 +705,51 @@
                 
             }
 
+
+            function generateScene4Annotation(){
+                var startDate = new Date('2020-03-15T00:00:00.000Z');
+                var notes = '';
+                switch(countrySelection){
+                    case countryOptions.USA:
+                        startDate = new Date('2020-04-21T00:00:00.000Z');
+                        genAnnotation(startDate, 'SC Reopen');
+                        startDate = new Date('2020-05-16T00:00:00.000Z');
+                        genAnnotation(startDate, 'PA Reopen', 20);
+                        startDate = new Date('2020-05-19T00:00:00.000Z');
+                        genAnnotation(startDate, 'MA Reopen', -50);
+                        startDate = new Date('2020-05-26T00:00:00.000Z');
+                        genAnnotation(startDate, 'CA Reopen', 50);
+                        startDate = new Date('2020-05-27T00:00:00.000Z');
+                        genAnnotation(startDate, 'WA Reopen', -20);
+                        startDate = new Date('2020-05-30T00:00:00.000Z');
+                        genAnnotation(startDate, 'NY Reopen', 80);
+                        break;
+                    case countryOptions.GER:
+                        startDate = new Date('2020-04-21T00:00:00.000Z');
+                        genAnnotation(startDate, 'Reopening begin');
+                        break;
+                    case countryOptions.ITA:
+                        startDate = new Date('2020-05-05T00:00:00.000Z');
+                        genAnnotation(startDate, 'Reopening begin',-30);
+                        break;
+                    case countryOptions.NZL:
+                        startDate = new Date('2020-04-28T00:00:00.000Z');
+                        genAnnotation(startDate, 'Reopening begin', -30);
+                        break;
+                    case countryOptions.KOR:
+                        startDate = new Date('2020-05-21T00:00:00.000Z');
+                        genAnnotation(startDate, 'Schools reopen', -20);
+                        startDate = new Date('2020-05-28T00:00:00.000Z');
+                        genAnnotation(startDate, 'Schools Closing', 20);
+                        break;
+                    case countryOptions.SWE:
+                        //startDate = new Date('2020-06-11T00:00:00.000Z');
+                        //genAnnotation(startDate, 'Public gathering limitation');
+                        break;
+                }
+                
+            }
+
             function generateScene3graph(){
                 var projectionStartDate = new Date('2020-03-15T00:00:00.000Z');
                 var endOfActual = new Date('2020-04-15T00:00:00.000Z');
@@ -748,16 +813,26 @@
                     .transition().duration(2000).attr("d", d3.line()
                         .x(function(d) { return x(d.date_epicrv) })
                         .y(function(d) { return y(d.CumCase) })
-                    );
+                    )
+                    .end()
+                    .then(generateScene4Annotation);//d => {generateScene4Annotation()});
                 //var endOfActual = new Date('2020-04-15T00:00:00.000Z');
                 //var endIndex = countryDateIndex['United States of America'][endOfActual];
 
+                /*
                 graph3Path                    
                     .transition().duration(2000).attr("d", d3.line()
                         .x(function(d) { return x(d.date_epicrv) })
                         .y(function(d) { return y(d.CumCase) })
-                    );  
+                    );
+                */  
             }
+
+            function endAll(transition, callback) {
+                var n = 0
+                transition.each(() => ++n)
+                  .each('end', () => (!--n && callback.apply(this, arguments)))
+              }
 
             /*---- SCENE TRANSITION ----*/
             var buttonIds = [
