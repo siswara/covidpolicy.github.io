@@ -57,6 +57,7 @@
             <button id="buttonScene3" onclick="openScene3()">3</button>
             <button id="buttonScene4" onclick="openScene4()">4</button>
             <button id="buttonScene5" onclick="openScene5()">5</button>
+            <button id="buttonScene6" onclick="openScene6()">6</button>
             <div id="scene1">
                 <p>
                     <b>EARLY PROJECTIONS</b><br> 
@@ -73,23 +74,35 @@
                 </p>
             </div>
             <div id="scene3" class="hide">
+                    <p>
+                        <b>EFFECT OF PUBLIC RESTRICTION</b><br> 
+                        As pandemic progresses, we can see the comparison of infection rate prediction against number of recorded cases.
+                    </p>
+                </div>
+            <div id="scene4" class="hide">
                 <p>
                     <b>SELF-QUARANTINE EASING</b><br> 
                     As pandemic progresses, some goverment shows decreases in infection rate and start to relax public closure policy.  However this policy affect vary across countries.
                 </p>
             </div>
-            <div id="scene4" class="hide">
+            <div id="scene5" class="hide">
                 <p>
                     <b>FUTURE PROJECTION</b><br> 
                     With new policy implementation of mandatory mask, social distancing and public reopen will infection rate follow the predictive model? Only time will tell, but we can play our role slowing down the spread by waring mask and social distance.
                 </p>
             </div>
-            <div id="scene5" class="hide">
+            <div id="scene6" class="hide">
                     <p>
                         <b>References</b><br> 
                         <ul>
                             <li>Literature source for prediction model <a href="https://www.medrxiv.org/content/10.1101/2020.03.21.20039867v1.full.pdf">A New, Simple Projection Model for COVID-19 Pandemic.pdf</a></li>
                             <li>WHO covid data <a href="https://data.humdata.org/dataset/coronavirus-covid-19-cases-and-deaths">Coronavirus (COVID-19) Cases and Deaths</a></li>
+                            <li>US covid timeline <a href="https://en.wikipedia.org/wiki/Timeline_of_the_COVID-19_pandemic_in_the_United_States">link</a></li>
+                            <li>South Korea covid timeline <a href="https://en.wikipedia.org/wiki/COVID-19_pandemic_in_South_Korea">link</a></li>
+                            <li>Germany covid policy timeline <a href="https://ourworldindata.org/covid-exemplar-germany">link</a></li>
+                            <li>Italy covid timeline <a href="https://en.wikipedia.org/wiki/COVID-19_pandemic_lockdown_in_Italy">link</a></li>
+                            <li>New Zealand covid timeline <a href="https://time.com/5824042/new-zealand-coronavirus-elimination/">link</a></li>
+                            <li>Sweden covid timeline <a href="https://en.wikipedia.org/wiki/COVID-19_pandemic_in_Sweden">link</a></li>
                         </ul>
                     </p>
             </div>
@@ -254,7 +267,7 @@
                     );
             }
 
-            function genGraphAndAxisUntilDate(data,startDate){
+            function genGraphAndAxisUntilDate(data,startDate,xStartIndex = 0, xIndexAddition = 50, yMultiplier = 5){
                 var startIndex = 0;
                 var i = 0;
                 data.forEach(function(item){
@@ -270,7 +283,7 @@
                 x = d3.scaleTime()
                     //.domain(d3.extent(data, function(d) { return d.date_epicrv; }))
                     //.domain(dates)
-                    .domain(d3.extent(/*data*/countryData['United States of America'].slice(0, startIndex+50), 
+                    .domain(d3.extent(/*data*/countryData['United States of America'].slice(xStartIndex, startIndex + xIndexAddition + xStartIndex), 
                         function(d) { return d.date_epicrv; }))
                     .range([ 0, width ]);
                 svg.append("g")
@@ -279,11 +292,39 @@
                 // Add Y axis
                 y = d3.scaleLinear()
                     //.domain([0, d3.max(data, function(d) { return +d.CumCase; })])
-                    .domain([0, d3.max(slicedData, function(d) { return +(d.CumCase*5.0); })])
+                    .domain([0, d3.max(slicedData, function(d) { return +(d.CumCase * yMultiplier); })])
                     .range([ height, 0 ]);
                 svg.append("g")
                     .call(d3.axisLeft(y));
 
+                svg.append('path')
+                    .datum(slicedData)
+                    .attr("fill", "none")
+                    .attr("stroke", "steelblue")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(function(d) { return x(d.date_epicrv) })
+                        .y(function(d) { return y(d.CumCase) })
+                    );
+            }
+
+            function genGraphAndAxisUntilDateNoXYChanges(data,startDate){
+                var startIndex = 0;
+                var i = 0;
+                data.forEach(function(item){
+                    if (item.date_epicrv.getTime() == startDate.getTime()){
+                        startIndex = i;
+                    } else {
+                        i++;
+                    }
+                });
+
+                var slicedData = data.slice(0, startIndex+2);
+                svg.append("g")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x));
+                svg.append("g")
+                    .call(d3.axisLeft(y));
                 svg.append('path')
                     .datum(slicedData)
                     .attr("fill", "none")
@@ -504,19 +545,23 @@
                         break;
                     case 2:
                         generateScene1graph();
-                        //var startDate = new Date('2020-03-10T00:00:00.000Z');
-                        //genAnnotation(startDate, 'Test');
                         generateScene2Annotation();
                         break;
                     case 3:
+                        generateScene1graph();
+                        generateScene3graph();
+                        generateScene2Annotation();
                         break;
                     case 4:
+                        break;
+                    case 5:
                         break;
                 }
             }
 
             function generateScene1graph(){
                 var startDate = new Date('2020-03-15T00:00:00.000Z');
+                var xStartIndex = 0;
                 switch(countrySelection){
                     case countryOptions.USA:
                         //startDate = new Date('2020-04-05T00:00:00.000Z');
@@ -531,6 +576,7 @@
                         break;
                     case countryOptions.NZL:
                         startDate = new Date('2020-03-25T00:00:00.000Z');
+                        xStartIndex = 25;
                         break;
                     case countryOptions.KOR:
                         startDate = new Date('2020-02-21T00:00:00.000Z');
@@ -540,7 +586,8 @@
                         break;
                 }
                 //starting date is different for each country
-                genGraphAndAxisUntilDate(countryData[countrySelection], startDate);
+                //TODO : axis issue
+                genGraphAndAxisUntilDate(countryData[countrySelection], startDate, xStartIndex);
                 genProjectionFromStartDate(countryData[countrySelection],startDate);
             }
 
@@ -578,20 +625,57 @@
                 
             }
 
+            function generateScene3graph(){
+                var projectionStartDate = new Date('2020-03-15T00:00:00.000Z');
+                var endOfActual = new Date('2020-04-15T00:00:00.000Z');
+                var xStartIndex = 0;
+                var xIndexAddition = 30;
+                var yMultiplier = 2;
+                switch(countrySelection){
+                    case countryOptions.USA:
+                        //startDate = new Date('2020-04-05T00:00:00.000Z');
+                        startDate = new Date('2020-03-24T00:00:00.000Z');
+                        break;
+                    case countryOptions.GER:
+                        //startDate = new Date('2020-04-05T00:00:00.000Z');
+                        startDate = new Date('2020-03-24T00:00:00.000Z');
+                        break;
+                    case countryOptions.ITA:
+                        startDate = new Date('2020-03-25T00:00:00.000Z');
+                        break;
+                    case countryOptions.NZL:
+                        startDate = new Date('2020-03-25T00:00:00.000Z');
+                        xStartIndex = 25;
+                        break;
+                    case countryOptions.KOR:
+                        startDate = new Date('2020-02-21T00:00:00.000Z');
+                        break;
+                    case countryOptions.SWE:
+                        startDate = new Date('2020-03-25T00:00:00.000Z');
+                        break;
+                }
+                //starting date is different for each country
+                //genGraphAndAxisUntilDate(countryData[countrySelection], endOfActual, xStartIndex, xIndexAddition, yMultiplier);
+                genGraphAndAxisUntilDateNoXYChanges(countryData[countrySelection], endOfActual);
+                genProjectionFromStartDate(countryData[countrySelection],startDate);
+            }
+
             /*---- SCENE TRANSITION ----*/
             var buttonIds = [
                 'buttonScene1',
                 'buttonScene2',
                 'buttonScene3',
                 'buttonScene4',
-                'buttonScene5'
+                'buttonScene5',
+                'buttonScene6'
             ];
             var sceneIds = [
                 'scene1',
                 'scene2',
                 'scene3',
                 'scene4',
-                'scene5'
+                'scene5',
+                'scene6'
             ];
             function deselectAllButton(){
                 buttonIds.forEach(function(id){
@@ -628,6 +712,7 @@
                 document.getElementById(sceneIds[2]).className = '';
                 activeScene = 3;
                 //graph re-rendering
+                genScreenGraph();
             }
             function openScene4(){
                 deselectAllButton();
@@ -636,6 +721,7 @@
                 document.getElementById(sceneIds[3]).className = '';
                 activeScene = 4;
                 //graph re-rendering
+                genScreenGraph();
             }
             function openScene5(){
                 deselectAllButton();
@@ -643,6 +729,14 @@
                 document.getElementById(buttonIds[4]).className = 'sceneSelected';
                 document.getElementById(sceneIds[4]).className = '';
                 activeScene = 5;
+                //graph re-rendering
+            }
+            function openScene6(){
+                deselectAllButton();
+                hideAllScene();
+                document.getElementById(buttonIds[5]).className = 'sceneSelected';
+                document.getElementById(sceneIds[5]).className = '';
+                //activeScene = 6;
                 //graph re-rendering
             }
         </script>
